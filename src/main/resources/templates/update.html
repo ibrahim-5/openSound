@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Update</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+</head>
+<script>
+    async function updateSound(id) {
+
+        // Ensure that all requirements are fulfilled
+        if (document.getElementById("image").files.length == 0 ||
+            document.getElementById("audio").files.length == 0 ||
+            document.getElementById("name").value == "" ||
+            document.getElementById("desc").value == "") {
+            alert("All elements of the form must be filled out!")
+            return;
+        }
+
+        // Ensure that audio and image files don't exceed limit
+
+        if (document.getElementById("image").files[0].size / 1024 / 1024 >= 1 ||
+            document.getElementById("audio").files[0].size / 1024 / 1024 >= 10){
+                alert("Files exceed size limit. Images < 1MB , Audio < 10MB.")
+                return;
+        }
+
+
+        // Valid
+        let formdata = new FormData();
+        formdata.set("image", document.getElementById("image").files[0])
+        formdata.set("audio", document.getElementById("audio").files[0])
+        formdata.set("name", document.getElementById("name").value)
+        formdata.set("description", document.getElementById("desc").value)
+
+        document.getElementById("update-button").disabled = true;
+        document.getElementById("update-button").innerHTML = "Updating..."
+
+
+        await fetch("/update/" + id, {
+            method: 'put',
+            body: formdata
+        }).then(
+            (resp) => {
+                alert("Sound has been updated!")
+                document.getElementById("update-button").innerHTML = "Updated!"
+
+            }, (bad) => {
+                console.log(bad)
+                alert("Sound has not been able to be updated! Try again!")
+                document.getElementById("update-button").innerHTML = "Update"
+                document.getElementById("update-button").disabled = true;
+
+            }
+        )
+    }
+</script>
+
+<body style="background: rgb(215, 215, 215);">
+    <nav class="nav justify-content-left" style="background-color: hsl(0,0%,13%);">
+        <a class="nav-link active" th:href="@{/}">openSound</a>
+    </nav>
+    <div class=" d-flex justify-content-center">
+        <div class="card" style="margin: 10px;">
+            <img class="card-img-top" th:src="${sound.getSoundImageURL()}" alt="Card image cap" id="placeholder">
+            <div class="card-body">
+                <h4 class="card-title">Update your sound</h4>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">New Image file <input type="file" name="image" id="image"
+                        style="margin-left: 10px;" accept="image/jpeg, image/png" th:value="${sound.getSoundImageURL()}"
+                        onchange="document.getElementById('placeholder').src = window.URL.createObjectURL(this.files[0])">
+                </li>
+                <li class=" list-group-item">New Audio File <input type="file" name="audio" id="audio"
+                        style="margin-left: 10px;" accept="audio/mpeg">
+                </li>
+                <li class="list-group-item"> Name <input type="text" name="name" id="name" style="margin-left: 10px;"
+                        th:value="${sound.getSoundName()}">
+                </li>
+                <li class="list-group-item">Description <input type="text" name="desc" id="desc"
+                        style="margin-left: 10px;" th:value="${sound.getSoundDescription()}">
+                </li>
+                <button id="update-button" type="button" class="btn btn-success" th:data-name="${sound.getId()}" onclick="updateSound(this.getAttribute('data-name'))">
+                    Update
+                </button>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>
